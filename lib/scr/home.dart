@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sockets/model/model_bande.dart';
+import 'package:sockets/service/provider_socket.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -18,7 +20,24 @@ List<Banda> bandas = [
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<ProviderSocket>(context);
     return Scaffold(
+      appBar: AppBar(actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 15),
+          child: provider.serverStatus == ServerStatus.Online
+              ? const CircleAvatar(
+                  child: Icon(Icons.signal_cellular_alt_outlined,
+                      color: Colors.green),
+                )
+              : const CircleAvatar(
+                  child: Icon(
+                    Icons.signal_cellular_off,
+                    color: Colors.red,
+                  ),
+                ),
+        )
+      ]),
       body: ListView.builder(
           itemCount: bandas.length,
           itemBuilder: (context, index) => _listadoBandas(bandas[index])),

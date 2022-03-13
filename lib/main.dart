@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sockets/scr/scr.dart';
+import 'package:sockets/service/provider_socket.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,11 +12,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      initialRoute: 'home',
-      routes: {
-        'home': (_) => const Home(),
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => ProviderSocket(),
+        )
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        initialRoute: 'home',
+        routes: {
+          'home': (_) => const Home(),
+          'status': (_) => const StatusServer()
+        },
+      ),
     );
   }
 }

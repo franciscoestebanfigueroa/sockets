@@ -1,27 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:pie_chart/pie_chart.dart';
 import 'package:provider/provider.dart';
 import 'package:sockets/model/model_bande.dart';
 import 'package:sockets/service/provider_socket.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  Home({Key? key}) : super(key: key);
 
   @override
   State<Home> createState() => _HomeState();
 }
 
-List<Banda> bandas = [
-  Banda(nombre: 'Jesus Adrian Romero', votos: 1, id: DateTime.now().toString()),
-  Banda(nombre: 'Ricardo M', votos: 1, id: DateTime.now().toString()),
-  Banda(nombre: 'Redimi2', votos: 1, id: DateTime.now().toString()),
-  Banda(nombre: 'Lili', votos: 1, id: DateTime.now().toString()),
-];
-
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<ProviderSocket>(context);
+    final provider = Provider.of<ProviderSocket>(
+      context,
+    );
+
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          //provider.listadoBandas = [];
+          showDialog(
+              context: context,
+              builder: (context) {
+                final controlerText = TextEditingController();
+                return AlertDialog(
+                  actions: [
+                    TextField(
+                      controller: controlerText,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                            onPressed: () {
+                              provider.socket.emit(
+                                  'nuevaBanda', {'name': controlerText.text});
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Add')),
+                        TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Salir')),
+                      ],
+                    )
+                  ],
+                );
+              });
+        },
+      ),
       appBar: AppBar(actions: [
         Padding(
           padding: const EdgeInsets.only(right: 15),
@@ -38,18 +69,48 @@ class _HomeState extends State<Home> {
                 ),
         )
       ]),
-      body: ListView.builder(
-          itemCount: bandas.length,
-          itemBuilder: (context, index) => _listadoBandas(bandas[index])),
+      body: Column(
+        children: [
+          const SizedBox(
+            height: 20,
+          ),
+          Expanded(
+            flex: 2,
+            child: provider.dataMap.isNotEmpty
+                ? PieChart(
+                    ringStrokeWidth: 20,
+                    chartRadius: MediaQuery.of(context).size.width / 3.2,
+                    chartType: ChartType.ring,
+                    dataMap: provider.dataMap,
+                  )
+                : const SizedBox(),
+          ),
+          Expanded(
+            flex: 3,
+            child: ListView.builder(
+                itemCount: provider.listadoBandas.length,
+                itemBuilder: (context, index) =>
+                    _listadoBandas(provider.listadoBandas[index])),
+          ),
+        ],
+      ),
     );
   }
 
   Dismissible _listadoBandas(Banda banda) {
+    final provider = Provider.of<ProviderSocket>(
+      context,
+    );
+
     return Dismissible(
+      onDismissed: (direction) {
+        print(banda.id);
+        provider.socket.emit('eliminarBanda', {'id': banda.id.toString()});
+      },
       key: Key(banda.id),
       direction: DismissDirection.startToEnd,
       background: Container(
-        padding: EdgeInsets.only(left: 10),
+        padding: const EdgeInsets.only(left: 10),
         child: const Align(
           alignment: Alignment.centerLeft,
           child: Text(
@@ -60,10 +121,13 @@ class _HomeState extends State<Home> {
         color: Colors.red,
       ),
       child: ListTile(
+        onTap: () {
+          provider.socket.emit('votacion', {'id': banda.id});
+        },
         leading: CircleAvatar(
-          child: Text(banda.nombre.substring(0, 2)),
+          child: Text(banda.name.substring(0, 2)),
         ),
-        title: Text(banda.nombre),
+        title: Text(banda.name),
         trailing: Text(banda.votos.toString()),
       ),
     );

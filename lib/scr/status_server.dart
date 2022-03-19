@@ -12,7 +12,7 @@ class StatusServer extends StatelessWidget {
     return Scaffold(
       body: Center(
         child: Container(
-          child: Text(provider.socketOn['nombre']),
+          child: Text('provider.socketOn[nombre]'),
           //color: provider.serverStatus == ServerStatus.Online
           //    ? Colors.green
           //    : Colors.red,
